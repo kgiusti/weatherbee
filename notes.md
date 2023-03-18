@@ -23,6 +23,12 @@ ampy: Adafruit MicroPython Tool
 
 $ export AMPY_PORT=/dev/ttyUSB0
 $ ampy ls
+$ ampy put somefile.py  # write somefile.py to device
+$ ampy rm somefile.py   # delete it
+
+# copy server.py to device ram and execute it
+$ ampy run --no-output wemos_d1_mini/server.py
+$ ampy reset
 
 
 Wireless AP
@@ -33,4 +39,14 @@ MicroPython-6e47cc
 micropythoN
 IP address 192.168.4.1
 
+
+On Board LED
+------------
+
+GPIO pin 2
+
+>>> from machine import Pin
+>>> p2 = Pin(2, Pin.OUT)
+>>> p2.value(1)  # OFF
+>>> p2.value(0)  # ON
 

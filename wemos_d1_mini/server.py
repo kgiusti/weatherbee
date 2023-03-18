@@ -21,25 +21,34 @@ import json
 import socket
 import sys
 
-led_state = 0
+import led
+
+led = led.LED()
+
 temp_f = 60
 
 def f_to_c():
     global temp_f
     return (temp_f - 32) * 0.5556
 
-def led_to_text():
-    global led_state
-    return "ON" if led_state == 1 else "OFF"
-
 def do_get(sock, target, in_file):
+    global led
     global temp_f
+
     print("GET JSON")
+    while True:
+        line = in_file.readline().decode()
+        if line == '':
+            print("Client closed socket")
+            return
+        if line.strip() == "":
+            # end of headers
+            break;
     out = json.dumps({'weatherbee':
                       {'F': temp_f,
                        'C': f_to_c(),
                        'P': 21,
-                       "LED": led_to_text()}}).encode()
+                       "LED": led.state}}).encode()
     sock.sendall(b'HTTP/1.0 200 OK\r\n')
     sock.sendall(b'Content-type: application/json\r\n')
     sock.sendall(b'Content-length: %d\r\n\r\n' % len(out))
@@ -47,15 +56,14 @@ def do_get(sock, target, in_file):
     print("json sent %s" % out)
 
 def do_put(sock, target, in_file):
-    global led_state
+    global led
+
     # skip headers
-    print("READ HEADERS")
     while True:
         line = in_file.readline().decode()
         if line == '':
             print("Client closed socket")
             return
-        print("READ HEADER: %s" % line)
         if line.strip() == "":
             # end of headers
             break;
@@ -68,9 +76,9 @@ def do_put(sock, target, in_file):
         new_led = data['weatherbee']['led']
         print("NEW LED: %s" % new_led)
         if new_led.upper() == "ON":
-            led_state = 1
+            led.on()
         else:
-            led_state = 2
+            led.off()
         print("POST DONE OK")
         sock.sendall(b'HTTP/1.0 204 No Content\r\n\r\n')
     except Exception as exc:
