@@ -18,22 +18,24 @@
 #
 
 import json
+import machine
 import socket
 import sys
 
+import bme280
 import led
 
 led = led.LED()
+_i2c = machine.I2C(scl=machine.Pin(5), sda=machine.Pin(4))
+bme = bme280.BME280(i2c=_i2c)
 
-temp_f = 60
 
-def f_to_c():
-    global temp_f
-    return (temp_f - 32) * 0.5556
+def c_to_f(temp_c):
+    return (temp_c * 1.8) + 32.0
 
 def do_get(sock, target, in_file):
     global led
-    global temp_f
+    global bme
 
     print("GET JSON")
     while True:
@@ -44,10 +46,14 @@ def do_get(sock, target, in_file):
         if line.strip() == "":
             # end of headers
             break;
+
+    temp_c, hpa, hum_p = bme.raw_values
+
     out = json.dumps({'weatherbee':
-                      {'F': temp_f,
-                       'C': f_to_c(),
-                       'P': 21,
+                      {'F': c_to_f(temp_c),
+                       'C': temp_c,
+                       'hPa': hpa,
+                       'H': hum_p,
                        "LED": led.state}}).encode()
     sock.sendall(b'HTTP/1.0 200 OK\r\n')
     sock.sendall(b'Content-type: application/json\r\n')

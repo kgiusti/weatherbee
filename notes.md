@@ -50,3 +50,13 @@ GPIO pin 2
 >>> p2.value(1)  # OFF
 >>> p2.value(0)  # ON
 
+I2C
+---
+from machine import Pin, I2C
+
+SCL=GPIO5
+SCA=GPIO4
+
+i2c = I2C(scl=Pin(5), sda=Pin(4), freq=100000)
+
+
