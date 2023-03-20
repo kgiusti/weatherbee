@@ -1,7 +1,14 @@
+
+WEMOS D1 LITE BMP280 Micropython Demo
+=====================================
+
+Download Micropython
+--------------------
+
 esptool.py --port /dev/ttyUSB0 --baud 1000000 write_flash --flash_size=4MB -fm dio 0 esp8266-1m-20220618-v1.19.1.bin
 
-The filesystem starting at sector 153 with size 866 sectors looks corrupt.      
-You may want to make a flash snapshot and try to recover it. Otherwise,         
+The filesystem starting at sector 153 with size 866 sectors looks corrupt.
+You may want to make a flash snapshot and try to recover it. Otherwise, 
 format it with uos.VfsLfs2.mkfs(bdev), or completely erase the flash and        
 reprogram MicroPython.
 
@@ -46,7 +53,7 @@ On Board LED
 GPIO pin 2
 
 >>> from machine import Pin
->>> p2 = Pin(2, Pin.OUT)
+g>>> p2 = Pin(2, Pin.OUT)
 >>> p2.value(1)  # OFF
 >>> p2.value(0)  # ON
 

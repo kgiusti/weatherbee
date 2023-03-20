@@ -68,7 +68,7 @@ def handle_led(client, new_value):
 def main(argv):
     parser = argparse.ArgumentParser(description='Weatherbee client')
     parser.add_argument("-s", "--server",
-                        default='localhost:8888',
+                        default='196.168.4.1:8888',
                         help='Address of Weatherbee server')
 
     subparsers = parser.add_subparsers(dest='subcommand', required=True)
