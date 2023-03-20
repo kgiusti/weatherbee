@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+#
+
+#
+# Licensed to the Apache Software Foundation (ASF) undeugr one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+import argparse
+import json
+import socket
+import sys
+
+def handle_get(client):
+    client.sendall(b"GET /weatherbee HTTP/1.0\r\n\r\n")
+
+    # strip headers
+    in_file = client.makefile('rwb', 0)
+    while True:
+        line = in_file.readline().decode()
+        if line == '':
+            print("Error: connection failed")
+            return 1
+        if  line.strip() == "":
+            break;
+    try:
+        line = in_file.readline().decode().strip()
+        data = json.loads(line)
+        print(f"{data}")
+        return 0
+    except:
+        print("Error: invalid response")
+        return 1
+
+def handle_led(client, new_value):
+    data = json.dumps({'weatherbee': {'led': new_value}}).encode()
+    client.sendall(b"PUT /weatherbee/led HTTP/1.0\r\n")
+    client.sendall(b"Content-Type: application/json\r\n")
+    cl = "Content-Length: %s\r\n" % (len(data) + 2)
+    client.sendall(cl.encode())
+    client.sendall(b"\r\n")
+    # print(f"Sending {data}")
+    client.sendall(data)
+    client.sendall(b'\r\n')
+    # print(f"data sent")
+
+    client_file = client.makefile('rwb', 0)
+    response = client_file.readline().decode()
+    if '204' not in response:
+        print(f"Error: {response}")
+        return 1;
+    return 0
+
+def main(argv):
+    parser = argparse.ArgumentParser(description='Weatherbee client')
+    parser.add_argument("-s", "--server",
+                        default='localhost:8888',
+                        help='Address of Weatherbee server')
+
+    subparsers = parser.add_subparsers(dest='subcommand', required=True)
+    sp = subparsers.add_parser('led', help='control the board LED')
+    sp.add_argument("state", choices=['on', 'off'], help='turn the led on or off')
+
+    sp = subparsers.add_parser('get',
+                               help='get current temp/humidity/pressure')
+    args = parser.parse_args()
+
+    host, port = args.server.split(':')
+    addr = (host, int(port))
+
+    # print("Connecting to %s:%d" % addr)
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(addr)
+
+    if args.subcommand == 'get':
+        rc = handle_get(client)
+    elif args.subcommand == 'led':
+        rc = handle_led(client, args.state)
+    client.close()
+    return rc
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
